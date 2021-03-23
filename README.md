@@ -1,7 +1,7 @@
 # Classification Accuracy
  Code for my [Classification Accuracy App](accuracy.thurston.io).  
  
- [!](classacc.app.png)
+ [](classacc.app.PNG)
  
  # Dependencies
  The following libraries are used, principally caret:
