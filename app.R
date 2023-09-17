@@ -9,7 +9,7 @@ ui <- shinyUI(navbarPage("Classification Accuracy",
 #####################
 #Classification Accuracy UI Panel#
 #####################
-  tabPanel("App",
+  tabPanel("Scatterplot",
     fluidPage(
       fluidRow(
       column(width=2,
@@ -19,6 +19,9 @@ ui <- shinyUI(navbarPage("Classification Accuracy",
         numericInput("acut", label = h5("Actual Cut Score"), value = 0, step = .05),
         hr(),
         sliderInput("trans",     label = h5("Transparency"), min = 0, max = 100, value = 25, step = 5, post = "%"),
+        hr(),
+        checkboxInput('setseed','Set seed', value = TRUE),
+        numericInput("seed", label = h5("Seed value"), value = 12345),
         hr(),
         br(),
         h2(a("@AJThurston", href="https://twitter.com/AJThurston", target="_blank"), align = "center")
@@ -75,7 +78,7 @@ tabPanel("Documentation",
            fluidRow(
              column(width=6,
                     
-                    p(strong("Formulas for values calculated on App page:")),
+                    p(strong("Formulas:")),
                     hr(),
                     p("Overall Accuracy = (TP + TN)/(TP + FP + FN + TN)"),  
                     p("Sensitivity = TP/(TP + FN)"), 
@@ -106,7 +109,7 @@ tabPanel("Documentation",
                     br(),
                     h2(a("LinkedIn: AJThurston", href="https://www.linkedin.com/in/ajthurston/", target="_blank")),
                     br(),
-                    h2(a("Medium:  @AJThurston", href="https://medium.com/@AJThurston", target="_blank"))
+                    h2(a("Substack:  @AJThurston", href="https://substack.com/@AJThurston", target="_blank"))
              )
            )
          )
@@ -117,14 +120,19 @@ tabPanel("Documentation",
 server <- shinyServer(function(input, output) {
   output$plot = renderPlot({
 
-
-
   #Simulated Data and Classification
+
+    if(input$setseed == TRUE)
+    {
+      set.seed(input$seed);
+    }
+    
+   
   x1 = rnorm(n=input$n, mean=input$predmean, sd=input$predSD) 
   y0 = rnorm(n=input$n, mean=input$actumean, sd=input$actuSD)
   y1 = x1*input$r+y0*(1-input$r^2)^0.5
-  Predicted = as.integer(x1>input$pcut)
-  Actual = as.integer(y1>input$acut)
+  Predicted = as.factor(x1>input$pcut)
+  Actual = as.factor(y1>input$acut)
   data = data.frame(x1,y1,Predicted,Actual)
   
   #Confusion Matrix
@@ -133,7 +141,7 @@ server <- shinyServer(function(input, output) {
   TN = sum(x1<input$pcut & y1<input$acut) #D
   FP = sum(x1>input$pcut & y1<input$acut) #B
   
-  cm = confusionMatrix(data$Predicted,data$Actual,positive = "1")
+  cm = confusionMatrix(data$Predicted,data$Actual)
   
   Accuracy      = percent(cm$overall[1],digits = 2)
   Kappa         =   round(cm$overall[2],digits = 2)
